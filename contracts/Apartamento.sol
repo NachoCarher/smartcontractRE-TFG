@@ -19,4 +19,9 @@ contract Apartamento is ERC20 {
         console.log("Recibiendo tokens");
         balance += msg.value;
     }
+
+    // funcion para retirar fondos (transfiere todo a quien la llame)
+    function retirar() public {
+        payable(msg.sender).transfer(address(this).balance);
+    }
 }

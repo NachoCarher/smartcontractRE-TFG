@@ -52,7 +52,29 @@ describe("Apartamento", function () {
     // Se consulta el saldo del smart contract
     expect(await apartamento.balance()).to.equal(ethers.utils.parseEther("5"));
   })
+  
+  // Caso de test 4
+  it("El propietario debe poder retirar los fondos pagados como alquiler", async () => {
+    const Apartamento = await ethers.getContractFactory("Apartamento");
+    const apartamento = await Apartamento.deploy();
 
+    [propietario, Marta, Pedro] = await ethers.getSigners();
+
+    await apartamento.deployed();
+    await apartamento.transfer(Marta.address, 40);
+
+    await Pedro.sendTransaction({
+      to: apartamento.address,
+      value: ethers.utils.parseEther("5")
+    });
+
+    const balancePropietarioPrerretirada = await propietario.getBalance();
+    await apartamento.retirar();
+
+    // El balance del propietario debe ser mayor que el balance antes de retirar
+    expect((await propietario.getBalance()).gt(balancePropietarioPrerretirada)).to.be.true;
+
+  })
 
 
 });
