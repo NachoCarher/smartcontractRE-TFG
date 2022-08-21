@@ -83,7 +83,6 @@ describe("Apartamento", function () {
 
     [propietario, Marta, Pedro] = await ethers.getSigners();
 
-
     await apartamento.deployed();
     await apartamento.transfer(Marta.address, 40);
 
@@ -96,5 +95,24 @@ describe("Apartamento", function () {
     await apartamento.connect(Marta).retirar();
     expect((await Marta.getBalance()).gt(balanceMartaPrerretirada)).to.be.true;
   })
+
+  // Caso de test 6
+  it("El intento de retirada por un no accionista debe ser revertido", async () => {
+    const Apartamento = await ethers.getContractFactory("Apartamento");
+    const apartamento = await Apartamento.deploy();
+
+    [propietario, Marta, Pedro] = await ethers.getSigners();
+
+    await apartamento.deployed();
+    await apartamento.transfer(Marta.address, 40);
+
+    await Pedro.sendTransaction({
+      to: apartamento.address,
+      value: ethers.utils.parseEther("5")
+    });
+
+    await expect(apartamento.connect(Pedro).retirar()).to.be.revertedWith("No autorizado para retirar fondos");
+  })
+
 
 });

@@ -21,7 +21,9 @@ contract Apartamento is ERC20 {
     }
 
     // funcion para retirar fondos (transfiere todo a quien la llame)
+    // sólo la puede llamar quien tenga más de 0 tokens
     function retirar() public {
+        require(this.balanceOf(msg.sender) > 0, "No autorizado para retirar fondos");
         payable(msg.sender).transfer(address(this).balance);
     }
 }
