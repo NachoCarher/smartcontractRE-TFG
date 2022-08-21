@@ -114,5 +114,28 @@ describe("Apartamento", function () {
     await expect(apartamento.connect(Pedro).retirar()).to.be.revertedWith("No autorizado para retirar fondos");
   })
 
+  // Caso de test 7
+  it("Un accionista debe retirar lo correspondiente a su cantidad de acciones sobre el inmueble", async () => {
+    const Apartamento = await ethers.getContractFactory("Apartamento");
+    const apartamento = await Apartamento.deploy();
+
+    [propietario, Marta, Pedro] = await ethers.getSigners();
+
+    await apartamento.deployed();
+    await apartamento.transfer(Marta.address, 40);
+
+    await Pedro.sendTransaction({
+      to: apartamento.address,
+      value: ethers.utils.parseEther("5")
+    });
+
+    const balanceMartaPrerretirada = await Marta.getBalance();
+
+    await apartamento.connect(Marta).retirar();
+    expect(await (await apartamento.balance()).eq(ethers.utils.parseEther("3"))).to.be.true;
+    expect(await (await apartamento.balance()).gt(ethers.utils.parseEther("0"))).to.be.true;
+    expect(await (await Marta.getBalance()).gt(balanceMartaPrerretirada)).to.be.true;
+  })
+
 
 });
