@@ -76,5 +76,25 @@ describe("Apartamento", function () {
 
   })
 
+  // Caso de test 5
+  it("Otros inversores deben poder retirar los fondos pagados como alquiler", async () => {
+    const Apartamento = await ethers.getContractFactory("Apartamento");
+    const apartamento = await Apartamento.deploy();
+
+    [propietario, Marta, Pedro] = await ethers.getSigners();
+
+
+    await apartamento.deployed();
+    await apartamento.transfer(Marta.address, 40);
+
+    await Pedro.sendTransaction({
+      to: apartamento.address,
+      value: ethers.utils.parseEther("5")
+    });
+
+    const balanceMartaPrerretirada = await Marta.getBalance();
+    await apartamento.connect(Marta).retirar();
+    expect((await Marta.getBalance()).gt(balanceMartaPrerretirada)).to.be.true;
+  })
 
 });
