@@ -156,4 +156,30 @@ describe("Apartamento", function () {
     await expect(apartamento.connect(Marta).retirar()).to.be.revertedWith("No hay fondos para retirar");
   })
 
+  // Caso de test 9
+  it("Un accionista puede retirar varias veces si hay nuevos ingresos entre los intentos", async () => {
+    const Apartamento = await ethers.getContractFactory("Apartamento");
+    const apartamento = await Apartamento.deploy();
+
+    [propietario, Marta, Pedro, Juan] = await ethers.getSigners();
+
+    await apartamento.deployed();
+    await apartamento.transfer(Marta.address, 40);
+
+    await Pedro.sendTransaction({
+      to: apartamento.address,
+      value: ethers.utils.parseEther("5")
+    });
+
+    await apartamento.connect(Marta).retirar(); 
+
+    await Juan.sendTransaction({
+      to: apartamento.address,
+      value: ethers.utils.parseEther("3")
+    });
+
+    await expect(apartamento.connect(Marta).retirar()).not.to.be.revertedWith("No hay fondos para retirar");
+  })
+
+
 });

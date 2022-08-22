@@ -18,7 +18,6 @@ contract Apartamento is ERC20 {
     }
 
     receive() external payable {
-        console.log("Recibiendo tokens");
         balance += msg.value;
         ingresosTotales += msg.value;
     }
