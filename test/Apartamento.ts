@@ -181,5 +181,50 @@ describe("Apartamento", function () {
     await expect(apartamento.connect(Marta).retirar()).not.to.be.revertedWith("No hay fondos para retirar");
   })
 
+  // Caso de test 10
+  it("Cada retirada debe ser calculada sobre los nuevos ingresos, no el balance total", async () => {
+    const Apartamento = await ethers.getContractFactory("Apartamento");
+    const apartamento = await Apartamento.deploy();
 
+    [propietario, Marta, Pedro, Juan] = await ethers.getSigners();
+
+    await apartamento.deployed();
+    await apartamento.transfer(Marta.address, 40);
+
+    const balanceInicial = await Marta.getBalance();
+
+    // Pedro paga 5 ETH de alquiler
+    await Pedro.sendTransaction({
+      to: apartamento.address,
+      value: ethers.utils.parseEther("5")
+    });
+
+    // Marta hace una retirada (40/100 * 5) = ~2 ETH
+    await apartamento.connect(Marta).retirar(); 
+    // Se guarda el balance de Marta después de la primera retirada
+    const balancePostRetirada1 = await Marta.getBalance();
+
+    // Juan pagas 3 ETH de alquiler
+    await Juan.sendTransaction({
+      to: apartamento.address,
+      value: ethers.utils.parseEther("3")
+    });
+
+    // Marta hace una retirada (40/100 * nuevosIngresos(3)) = ~1.2 ETH
+    await apartamento.connect(Marta).retirar();
+    // Se guarda el balance de Marta después de la segunda retirada
+    const balancePostRetirada2 = await Marta.getBalance();
+
+    expect(balanceInicial.lt(balancePostRetirada1)).to.be.true;
+    expect(balancePostRetirada1.lt(balancePostRetirada2)).to.be.true;
+
+    /*
+    Balance disponible apartamento:
+    - Pedro paga el alquiler : 5 ETH
+    - Marta retira 1º vez: 3 ETH
+    - Juan paga el alquiler : 6 ETH
+    - Marta retira 2º vez: 4.8 ETH
+    */
+    expect((await apartamento.balance()).eq(ethers.utils.parseEther("4.8"))).to.be.true;
+  })
 });
