@@ -8,6 +8,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract Apartamento is ERC20 {
 
     uint public balance;
+    uint public ingresosTotales;
+    mapping(address => uint) registroRetirada;
 
     constructor() ERC20("ContratoApartamento", "APRTM") {
         // Asignar 100 tokens (100% de las acciones del piso) al propietario del contrato 
@@ -18,15 +20,18 @@ contract Apartamento is ERC20 {
     receive() external payable {
         console.log("Recibiendo tokens");
         balance += msg.value;
+        ingresosTotales += msg.value;
     }
 
     // funcion para retirar fondos (transfiere en función del porcentaje de acciones del apartamento)
     // sólo la puede llamar quien tenga más de 0 tokens
     function retirar() public {
         require(this.balanceOf(msg.sender) > 0, "No autorizado para retirar fondos");
+        require(ingresosTotales > registroRetirada[msg.sender], "No hay fondos para retirar");
 
         uint cantidadDeRetirada = address(this).balance / 100 * this.balanceOf(msg.sender);
         balance = balance - cantidadDeRetirada;
+        registroRetirada[msg.sender] = ingresosTotales;
         payable(msg.sender).transfer(cantidadDeRetirada);
     }
 }

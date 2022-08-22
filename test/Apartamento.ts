@@ -132,10 +132,28 @@ describe("Apartamento", function () {
     const balanceMartaPrerretirada = await Marta.getBalance();
 
     await apartamento.connect(Marta).retirar();
-    expect(await (await apartamento.balance()).eq(ethers.utils.parseEther("3"))).to.be.true;
-    expect(await (await apartamento.balance()).gt(ethers.utils.parseEther("0"))).to.be.true;
-    expect(await (await Marta.getBalance()).gt(balanceMartaPrerretirada)).to.be.true;
+    expect((await apartamento.balance()).eq(ethers.utils.parseEther("3"))).to.be.true;
+    expect((await apartamento.balance()).gt(ethers.utils.parseEther("0"))).to.be.true;
+    expect((await Marta.getBalance()).gt(balanceMartaPrerretirada)).to.be.true;
   })
 
+  // Caso de test 8
+  it("Un accionista no debe poder retirar más de una vez", async () => {
+    const Apartamento = await ethers.getContractFactory("Apartamento");
+    const apartamento = await Apartamento.deploy();
+
+    [propietario, Marta, Pedro] = await ethers.getSigners();
+
+    await apartamento.deployed();
+    await apartamento.transfer(Marta.address, 40);
+
+    await Pedro.sendTransaction({
+      to: apartamento.address,
+      value: ethers.utils.parseEther("5")
+    });
+
+    await apartamento.connect(Marta).retirar(); 
+    await expect(apartamento.connect(Marta).retirar()).to.be.revertedWith("No hay fondos para retirar");
+  })
 
 });
